@@ -6,6 +6,7 @@ import com.querydsl.jpa.impl.JPAQueryFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.support.PageableExecutionUtils;
 import study.querydsl.dto.MemberSearchCondition;
 import study.querydsl.dto.MemberTeamDto;
 import study.querydsl.dto.QMemberTeamDto;
@@ -97,7 +98,18 @@ public class MemberRepositoryImpl implements MemberRepositoryCustom { // impl은
 
         // join 없이도 total 쿼리의 개수가 같다면 쿼리 최적화를 해도 된다
         // simple과 같은 방식은 count query의 최적화가 어렵다
-        Long total = queryFactory
+//        Long total = queryFactory
+//                .select(member.count())
+//                .from(member)
+//                .leftJoin(member.team, team)
+//                .where(
+//                        usernameEq(condition.getUsername()),
+//                        teamNameEq(condition.getTeamName()),
+//                        ageGoe(condition.getAgeGoe()),
+//                        ageLoe(condition.getAgeLoe())
+//                )
+//                .fetchOne();
+        JPAQuery<Long> countQuery = queryFactory
                 .select(member.count())
                 .from(member)
                 .leftJoin(member.team, team)
@@ -106,10 +118,12 @@ public class MemberRepositoryImpl implements MemberRepositoryCustom { // impl은
                         teamNameEq(condition.getTeamName()),
                         ageGoe(condition.getAgeGoe()),
                         ageLoe(condition.getAgeLoe())
-                )
-                .fetchOne();
+                );
 
-        return new PageImpl<>(results, pageable, total.longValue());
+        // PageableExecutionUtils가 특정 조건들일 때
+        // 맨 마지막 값 없이도 count를 계산할 수 있음
+        return PageableExecutionUtils.getPage(results, pageable, () -> countQuery.fetchCount());
+//        return new PageImpl<>(results, pageable, total.longValue());
     }
 
     private BooleanExpression usernameEq(String username) {
