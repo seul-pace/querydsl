@@ -122,7 +122,7 @@ public class MemberRepositoryImpl implements MemberRepositoryCustom { // impl은
 
         // PageableExecutionUtils가 특정 조건들일 때
         // 맨 마지막 값 없이도 count를 계산할 수 있음
-        return PageableExecutionUtils.getPage(results, pageable, () -> countQuery.fetchCount());
+        return PageableExecutionUtils.getPage(results, pageable, countQuery::fetchOne);
 //        return new PageImpl<>(results, pageable, total.longValue());
     }
 
